@@ -10,13 +10,13 @@ print('Socket bind completato')
 
 try:
     s.bind((HOST, PORT))
+    
 except socket.error as msg:
     print("Bind fallita. Codice di errore: " + str(msg[0]) + " Messaggio " + msg[1])
     sys.exit()
 
 s.listen(10)
 print("Socket in ascolto")
-
 
 def clientthread(conn):
 
@@ -31,7 +31,6 @@ def clientthread(conn):
         conn.send(b"Digita qualcosa - \'exit\' per uscire: ")
 
     conn.close()
-
 
 while 1:
     conn, addr = s.accept()
