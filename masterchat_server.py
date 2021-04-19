@@ -4,6 +4,7 @@ from _thread import *
 
 HOST = ""
 PORT = 3333
+
 CLIENT={}
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
