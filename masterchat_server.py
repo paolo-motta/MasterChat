@@ -10,7 +10,6 @@ print('Socket bind completato')
 
 try:
     s.bind((HOST, PORT))
-    
 except socket.error as msg:
     print("Bind fallita. Codice di errore: " + str(msg[0]) + " Messaggio " + msg[1])
     sys.exit()
