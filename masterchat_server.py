@@ -1,7 +1,10 @@
 import socket
 import sys
 from _thread import *
+'''
 
+
+'''
 #HOST = str(sys.argv[1])
 #PORT = int(sys.argv[2])
 HOST = ''
@@ -25,13 +28,13 @@ print("Socket in ascolto")
 def clientthread(conn):
 
     global CLIENT
-    
+
     while True:
         data = conn.recv(1024)
         combo = (addr[0], addr[1])
         CLIENT[str(addr[1])] = combo
         result=""
-        
+
         #!elenco
         if data[:7].decode() == "!elenco":
             print("Richiesto elenco")
@@ -51,7 +54,7 @@ def clientthread(conn):
                 #restituisco i parametri
                 result = nome + ": indirizzo " + CLIENT[nome][0] + " porta " + str(CLIENT[nome][1])
                 conn.send(result.encode() + b'\r\n')
-            
+
             if not nome in CLIENT:
                 print(nome + " non è disponibile")
                 result = nome + " non disponibile"
@@ -66,8 +69,8 @@ def clientthread(conn):
             conn.send(result.encode() + b'\r\nAddio\r\n')
             conn.close
             break
-        
-        
+
+
         '''
 
         conn.sendall(b"Ti rispondo con quello che mi hai inviato: " + data)
@@ -80,7 +83,7 @@ def clientthread(conn):
 while 1:
     conn, addr = s.accept()
     print('Connesso con ' + addr[0] + ':' + str(addr[1]))
-    
+
     start_new_thread(clientthread,(conn,))
 
 s.close()

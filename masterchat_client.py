@@ -1,5 +1,12 @@
 import socket, sys
+'''
+gestire connesisone udp con variabile impegnato
+la apro e lanciuo un traed se arriva connessione
+altrimenti in attesa comandi
 
+
+
+'''
 #NICK = str(sys.argv[0])
 #HOST = str(sys.argv[1])
 #PORT = int(sys.argv[2])
