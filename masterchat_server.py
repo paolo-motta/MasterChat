@@ -2,10 +2,13 @@ import socket
 import sys
 from _thread import *
 
-HOST = ""
-PORT = 3310
+#HOST = str(sys.argv[1])
+#PORT = int(sys.argv[2])
+HOST = ''
+PORT = 3313
 
-CLIENT={test1:(127.0.0.1,3311),test2:(127.0.0.1,3312),test3:(127.0.0.1,3313)}
+
+CLIENT={'test1':('127.0.0.1',3311),'test2':('127.0.0.1',3312),'test3':('127.0.0.1',3313)}
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 print('Socket bind completato')
@@ -21,37 +24,50 @@ print("Socket in ascolto")
 
 def clientthread(conn):
 
+    global CLIENT
     while True:
         data = conn.recv(1024)
-
-
+        
+        #print("data")
+        #print(data[:7])
+        
         if data.decode() == "exit\r\n":
             conn.close()
             break
 
         #!elenco
-        if data[:8] == "!elenco ":
+        if data[:7].decode() == "!elenco":
+            print("Richiesto elenco")
             #ciclo for per elenco utenti connessi
-            for nome in CLIENT.keys():
-                print("nome\r\n")
-                conn.send(nome)
+            for k in CLIENT:
+                result = k + ": indirizzo " + CLIENT[k][0] + " porta " + str(CLIENT[k][1])
+                conn.send(result.encode() + b'\r\n')
+                #conn.send(v)
+
+        #!connect nome
+        if data[:8].decode() == "!connect":
+            nome = data[9:-2].decode()
+            print(nome)
+            #cerco chiave "nome" in CLIENT
+            if CLIENT[nome]:
+                #restituisco i parametri
+                result = nome + ": indirizzo " + CLIENT[nome][0] + " porta " + str(CLIENT[nome][1])
+                conn.send(result.encode() + b'\r\n')
+                
+            if not CLIENT[nome]:
+                print("nome non in elenco")
+
+
 
         '''
-        #!connect nome
-        if data[:9] == "!connect ":
-            nome = data[9:]
-            #cerco chiave "nome" in CLIENT
-            if nome in CLIENT.keys():
-                #restituisco i parametri
-                conn.send(nome + tupla)
-            else
-                conn.send("nome non in elenco")
 
         !quit
 
 
+
         conn.sendall(b"Ti rispondo con quello che mi hai inviato: " + data)
         conn.send(b"Digita qualcosa - \'exit\' per uscire: ")
+
         '''
 
     conn.close()
