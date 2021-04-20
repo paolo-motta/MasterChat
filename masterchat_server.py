@@ -3,9 +3,9 @@ import sys
 from _thread import *
 
 HOST = ""
-PORT = 3333
+PORT = 3310
 
-CLIENT={}
+CLIENT={test1:(127.0.0.1,3311),test2:(127.0.0.1,3312),test3:(127.0.0.1,3313)}
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 print('Socket bind completato')
@@ -23,29 +23,36 @@ def clientthread(conn):
 
     while True:
         data = conn.recv(1024)
- 
-        
+
+
         if data.decode() == "exit\r\n":
             conn.close()
             break
-        
-        '''
-        !elenco
+
+        #!elenco
         if data[:8] == "!elenco ":
             #ciclo for per elenco utenti connessi
             for nome in CLIENT.keys():
-                print("nome|r\n")
+                print("nome\r\n")
                 conn.send(nome)
-        
-        !connect
-        
+
+        '''
+        #!connect nome
+        if data[:9] == "!connect ":
+            nome = data[9:]
+            #cerco chiave "nome" in CLIENT
+            if nome in CLIENT.keys():
+                #restituisco i parametri
+                conn.send(nome + tupla)
+            else
+                conn.send("nome non in elenco")
+
         !quit
-        
-        '''       
-        
-        
+
+
         conn.sendall(b"Ti rispondo con quello che mi hai inviato: " + data)
         conn.send(b"Digita qualcosa - \'exit\' per uscire: ")
+        '''
 
     conn.close()
 
