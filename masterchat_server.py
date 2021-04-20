@@ -5,7 +5,7 @@ from _thread import *
 #HOST = str(sys.argv[1])
 #PORT = int(sys.argv[2])
 HOST = ''
-PORT = 3321
+PORT = 3310
 
 
 CLIENT={'test1':('127.0.0.1',3311),'test2':('127.0.0.1',3312),'test3':('127.0.0.1',3313)}
@@ -44,7 +44,8 @@ def clientthread(conn):
         #!connect nome
         if data[:8].decode() == "!connect":
             nome = data[9:-2].decode()
-            print(nome)
+            print("Si vuole connettere con " + nome)
+            #print(nome)
             #cerco chiave "nome" in CLIENT
             if nome in CLIENT:
                 #restituisco i parametri
@@ -58,6 +59,7 @@ def clientthread(conn):
 
         #!quit
         if data[:5].decode() == "!quit":
+            print(str(addr[1]) + " ci ha lasciato.")
             del CLIENT[str(addr[1])]
             for k in CLIENT:
                 result += "\r\n" + k + ": indirizzo " + CLIENT[k][0] + " porta " + str(CLIENT[k][1])

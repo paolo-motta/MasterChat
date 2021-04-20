@@ -5,7 +5,7 @@ import socket, sys
 #PORT = int(sys.argv[2])
 NICK = "pippo"
 HOST = "127.0.0.1"
-PORT = 3321
+PORT = 3310
 
 try:
     st = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -15,17 +15,19 @@ except socket.error as msg:
 
 print('Socket Created')
 
-st.connect(("127.0.0.1", 3321))
+st.connect(("127.0.0.1", 3310))
 print("Server Socket Connected")
+
 st.send(b'!elenco')
 print(st.recv(1024).decode())
+
 st.send(b'!quit')
 print(st.recv(1024).decode())
 
 #connessione udp
-su = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+#su = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-su.sendto(b"Invio di prova", (HOST, PORT))
+#su.sendto(b"Invio di prova", (HOST, PORT))
 
 
 '''
