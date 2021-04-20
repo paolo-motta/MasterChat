@@ -2,16 +2,16 @@ import socket
 import sys
 from _thread import *
 '''
-
+gestire Dracarys per chiudere anche il server dal client
 
 '''
 #HOST = str(sys.argv[1])
 #PORT = int(sys.argv[2])
 HOST = ''
-PORT = 3310
+PORT = 3330
 
 
-CLIENT={'test1':('127.0.0.1',3311),'test2':('127.0.0.1',3312),'test3':('127.0.0.1',3313)}
+CLIENT={'tizio':('127.0.0.1',3311),'caio':('127.0.0.1',3312),'sempronio':('127.0.0.1',3313)}
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 print('Socket bind completato')
@@ -46,13 +46,13 @@ def clientthread(conn):
 
         #!connect nome
         if data[:8].decode() == "!connect":
-            nome = data[9:-2].decode()
+            nome = data[9:].decode()
             print("Si vuole connettere con " + nome)
             #print(nome)
             #cerco chiave "nome" in CLIENT
             if nome in CLIENT:
                 #restituisco i parametri
-                result = nome + ": indirizzo " + CLIENT[nome][0] + " porta " + str(CLIENT[nome][1])
+                result = str(CLIENT[nome][0]) + "|" + str(CLIENT[nome][1])
                 conn.send(result.encode() + b'\r\n')
 
             if not nome in CLIENT:
@@ -62,7 +62,7 @@ def clientthread(conn):
 
         #!quit
         if data[:5].decode() == "!quit":
-            print(str(addr[1]) + " ci ha lasciato.")
+            print(str(addr[1]) + " ci ha lasciato quit.")
             del CLIENT[str(addr[1])]
             for k in CLIENT:
                 result += "\r\n" + k + ": indirizzo " + CLIENT[k][0] + " porta " + str(CLIENT[k][1])
@@ -70,6 +70,16 @@ def clientthread(conn):
             conn.close
             break
 
+        #Dracarys
+        if data[:9].decode() == "!dracarys":
+            print(str(addr[1]) + " ci ha lasciato Dracarys.")
+            del CLIENT[str(addr[1])]
+            for k in CLIENT:
+                result += "\r\n" + k + ": indirizzo " + CLIENT[k][0] + " porta " + str(CLIENT[k][1])
+            conn.send(result.encode() + b'\r\nAddio\r\n')
+            conn.close
+            s.close
+            break
 
         '''
 

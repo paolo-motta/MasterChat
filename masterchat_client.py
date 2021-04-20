@@ -1,18 +1,20 @@
 import socket, sys
+
 '''
 gestire connesisone udp con variabile impegnato
 la apro e lanciuo un traed se arriva connessione
 altrimenti in attesa comandi
 
-
+passo argomenti come parametri tupla del thread
 
 '''
-#NICK = str(sys.argv[0])
-#HOST = str(sys.argv[1])
-#PORT = int(sys.argv[2])
-NICK = "pippo"
-HOST = "127.0.0.1"
-PORT = 3310
+NICK = str(sys.argv[1])
+HOST = str(sys.argv[2])
+PORT = int(sys.argv[3])
+#NICK = "pippo"
+#HOST = "127.0.0.1"
+#PORT = 3330
+IMPEGNATO = False
 
 try:
     st = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -22,18 +24,46 @@ except socket.error as msg:
 
 print('Socket Created')
 
-st.connect(("127.0.0.1", 3310))
+st.connect(("127.0.0.1", 3330))
 print("Server Socket Connected")
 
+#chiedo elenco client
 st.send(b'!elenco')
 print(st.recv(1024).decode())
 
-st.send(b'!quit')
-print(st.recv(1024).decode())
+while True:
+    #inserisco comando
+    cmd = input()
+    st.send(cmd.encode())
+    #ricevo e stampo risposta
+    data = st.recv(1024)
+    print(data.decode())
+    pos = data.decode().index('|')
+    #uscita = data[-7:-2].decode()
+    #print(uscita)
+    if cmd[:8] == "!connect":
+        su = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        while True:
+            message = input("inserisci messaggio")
+            su.sendto(message.encode(), (data[:pos], int(data[pos+1:])))
+            messaggio, addr = su.recvfrom(1024)
+            print("Ricevuto: " + messaggio.decode())
+    
+        while True:
+            data, addr = sock.recvfrom(1024)
+            print("received message:", data)
+
+    sock.sendto(data, (addr[0], addr[1]))
+    #!elenco
+    if data[-7:-2].decode() == "Addio":
+        print("ho decidso di andare via")
+        #print(data.decode())
+        st.close
+        break
+
 
 #connessione udp
 #su = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-
 #su.sendto(b"Invio di prova", (HOST, PORT))
 
 
