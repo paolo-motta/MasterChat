@@ -5,7 +5,7 @@ from _thread import *
 #HOST = str(sys.argv[1])
 #PORT = int(sys.argv[2])
 HOST = ''
-PORT = 3313
+PORT = 3321
 
 
 CLIENT={'test1':('127.0.0.1',3311),'test2':('127.0.0.1',3312),'test3':('127.0.0.1',3313)}
@@ -25,23 +25,20 @@ print("Socket in ascolto")
 def clientthread(conn):
 
     global CLIENT
+    
     while True:
         data = conn.recv(1024)
+        combo = (addr[0], addr[1])
+        CLIENT[str(addr[1])] = combo
+        result=""
         
-        #print("data")
-        #print(data[:7])
-        
-        if data.decode() == "exit\r\n":
-            conn.close()
-            break
-
         #!elenco
         if data[:7].decode() == "!elenco":
             print("Richiesto elenco")
             #ciclo for per elenco utenti connessi
             for k in CLIENT:
-                result = k + ": indirizzo " + CLIENT[k][0] + " porta " + str(CLIENT[k][1])
-                conn.send(result.encode() + b'\r\n')
+                result += "\r\n" + k + ": indirizzo " + CLIENT[k][0] + " porta " + str(CLIENT[k][1])
+            conn.send(result.encode() + b'\r\n')
                 #conn.send(v)
 
         #!connect nome
@@ -49,21 +46,27 @@ def clientthread(conn):
             nome = data[9:-2].decode()
             print(nome)
             #cerco chiave "nome" in CLIENT
-            if CLIENT[nome]:
+            if nome in CLIENT:
                 #restituisco i parametri
                 result = nome + ": indirizzo " + CLIENT[nome][0] + " porta " + str(CLIENT[nome][1])
                 conn.send(result.encode() + b'\r\n')
-                
-            if not CLIENT[nome]:
-                print("nome non in elenco")
+            
+            if not nome in CLIENT:
+                print(nome + " non è disponibile")
+                result = nome + " non disponibile"
+                conn.send(result.encode() + b'\r\n')
 
-
-
+        #!quit
+        if data[:5].decode() == "!quit":
+            del CLIENT[str(addr[1])]
+            for k in CLIENT:
+                result += "\r\n" + k + ": indirizzo " + CLIENT[k][0] + " porta " + str(CLIENT[k][1])
+            conn.send(result.encode() + b'\r\nAddio\r\n')
+            conn.close
+            break
+        
+        
         '''
-
-        !quit
-
-
 
         conn.sendall(b"Ti rispondo con quello che mi hai inviato: " + data)
         conn.send(b"Digita qualcosa - \'exit\' per uscire: ")
@@ -75,7 +78,7 @@ def clientthread(conn):
 while 1:
     conn, addr = s.accept()
     print('Connesso con ' + addr[0] + ':' + str(addr[1]))
-
+    
     start_new_thread(clientthread,(conn,))
 
 s.close()

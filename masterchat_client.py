@@ -1,11 +1,31 @@
-import socket
+import socket, sys
 
+#NICK = str(sys.argv[0])
+#HOST = str(sys.argv[1])
+#PORT = int(sys.argv[2])
+NICK = "pippo"
 HOST = "127.0.0.1"
-PORT = 8888
+PORT = 3321
 
-s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+try:
+    st = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+except socket.error as msg:
+    print('Failed to create socket. Error code: ' + str(msg[0]) + ' , Error message : ' + msg[1])
+    sys.exit();
 
-s.sendto(b"Invio di prova", (HOST, PORT))
+print('Socket Created')
+
+st.connect(("127.0.0.1", 3321))
+print("Server Socket Connected")
+st.send(b'!elenco')
+print(st.recv(1024).decode())
+st.send(b'!quit')
+print(st.recv(1024).decode())
+
+#connessione udp
+su = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+su.sendto(b"Invio di prova", (HOST, PORT))
 
 
 '''
