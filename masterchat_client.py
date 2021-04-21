@@ -5,7 +5,10 @@ gestire connesisone udp con variabile impegnato
 la apro e lanciuo un traed se arriva connessione
 altrimenti in attesa comandi
 
+passare nick al server
+
 passo argomenti come parametri tupla del thread
+
 
 '''
 NICK = str(sys.argv[1])
