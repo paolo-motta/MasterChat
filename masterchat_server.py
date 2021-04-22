@@ -1,6 +1,7 @@
 import socket
 import sys
 from _thread import *
+
 '''
 gestire Dracarys per chiudere anche il server dal client
 
@@ -28,12 +29,21 @@ print("Socket in ascolto")
 def clientthread(conn):
 
     global CLIENT
-
+    '''
+    VERIFICARE I DATI DI CONNESSIONE RICEVUTI
+    E MEMORIZZARLI
+    '''
     while True:
         data = conn.recv(1024)
+        print('\r\ndata: ' + data.decode())
+
         combo = (addr[0], addr[1])
-        CLIENT[str(addr[1])] = combo
+        print('\r\n combo: ' + str(combo))
+        
+        CLIENT[str(data[0])] = str(data[1])
+        print(CLIENT)
         result=""
+        conn.send(b'\r\n Ciao dati registrati')
 
         #!elenco
         if data[:7].decode() == "!elenco":
