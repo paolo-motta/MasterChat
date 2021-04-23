@@ -1,12 +1,17 @@
-import socket, sys
+import socket, sys, json
 from _thread import *
 
 #memorizzo dati del client e inizializzo variabili
 NICK = str(sys.argv[1])
 CONN = (str(sys.argv[2]), int(sys.argv[3]))
+#NICK = "pippo"
+#HOST = "127.0.0.1"
+#PORT = 3316
 NICK_REM = ""
 CONN_REM = ()
 IMPEGNATO = False
+PARAM = {'NICK':NICK,'IP':str(sys.argv[2]),'PORT':sys.argv[3]}
+#PARAM = {'NICK':NICK,'IP':HOST, 'PORT':PORT}
 #NICK = "pippo"
 #HOST = "127.0.0.1"
 #PORT = 3330
@@ -14,22 +19,22 @@ IMPEGNATO = False
 #creo socket tcp per il server
 try:
     st = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    print('Socket Creato')
 except socket.error as msg:
     print('Failed to create socket. Error code: ' + str(msg[0]) + ' , Error message : ' + msg[1])
     sys.exit();
 
-print('Socket Created')
-
 #creo connessione con il server
-st.connect(("127.0.0.1", 3330))
+st.connect(("127.0.0.1", 3340))
 print("Server Socket Connected")
 
 #invio parametri del client al server
-param = '('+NICK+'|'+str(CONN)+')'
-st.sendall(param.encode())
-print('\r\ninviati parametri nick e conn')
-#stampo conferma arrivo dati
+print(PARAM)
+st.sendall(json.dumps(PARAM).encode())
 print(st.recv(1024).decode())
+#print('\r\ninviati parametri nick e conn')
+#stampo conferma arrivo dati
+#print(st.recv(1024).decode())
 #chiedo elenco client al server
 st.sendall(b'!elenco')
 print('\r\nin attesa elenco')
@@ -44,7 +49,7 @@ def server_udp():
     print("\r\nSECONDARIO in attesa comando")
     global IMPEGNATO, NICK_REM, CONN_REM
     data, addr = su.recvfrom(1024)
-    #print('\r\n\Stampo dati prima connession: 'data.decode())
+    print('\r\n\Stampo dati prima connession: ' + data.decode())
     #verifico se già impegnato in cheht e modifico valore
     if IMPEGNATO == False:
        
@@ -82,13 +87,13 @@ start_new_thread(server_udp ,())
 
 while True:
     cmd = input("\r\nPRINCIPALE in attesa comando: ")
-
+    print('Ho inserito comando nel thread principale')
     #print('\r\n data: ' + data.decode())
     #combo = (addr[0], addr[1])
     #print('\r\n combo: ' + str(combo))
     #CLIENT[str(addr[1])] = combo
     #print(CLIENT)
-    result=""
+    #result=""
     #st.send(b'\r\n Ciao dati registrati')
 
     #!elenco
@@ -102,6 +107,10 @@ while True:
             #conn.send(v)
     #!quit
     if cmd[:5] == "!quit":
+        print("\r\nHai deciso di andartene!")
+        st.send(cmd.encode())
+        data = st.recv(1024)      
+        print(data.decode())                
         break
     
     #!connect nome

@@ -1,24 +1,20 @@
 import socket
-import sys
+import sys, json
 from _thread import *
 
-'''
-gestire Dracarys per chiudere anche il server dal client
-
-'''
 #HOST = str(sys.argv[1])
 #PORT = int(sys.argv[2])
 HOST = ''
-PORT = 3330
-
+PORT = 3340
 
 CLIENT={'tizio':('127.0.0.1',3311),'caio':('127.0.0.1',3312),'sempronio':('127.0.0.1',3313)}
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-print('Socket bind completato')
+print('Socket creato')
 
 try:
     s.bind((HOST, PORT))
+    print('Socket bind completato')
 except socket.error as msg:
     print("Bind fallita. Codice di errore: " + str(msg[0]) + " Messaggio " + msg[1])
     sys.exit()
@@ -33,26 +29,37 @@ def clientthread(conn):
     VERIFICARE I DATI DI CONNESSIONE RICEVUTI
     E MEMORIZZARLI
     '''
+    data = conn.recv(1024)
+    print('\r\nData: ' + data.decode())
+    #print(json.loads(data.decode()))
+    data = json.loads(data.decode())
+    combo = (data['IP'], data['PORT'])
+    #print(combo)
+    #print('\r\nCombo: ' + str(combo) + '\r\n')
+    
+    CLIENT[data['NICK']] = combo
+    print(CLIENT)
+    NICK_REM = data['NICK']
+    CONN_REM = (data['IP'],data['PORT'])
+    print(NICK_REM, CONN_REM)
+    conn.send(b'\r\nCiao dati registrati')    
+    
     while True:
+
         data = conn.recv(1024)
-        print('\r\ndata: ' + data.decode())
-
-        combo = (addr[0], addr[1])
-        print('\r\n combo: ' + str(combo))
-        
-        CLIENT[str(data[0])] = str(data[1])
-        print(CLIENT)
+        print('\r\nRicevuto il seguente comando: ' + data.decode())
         result=""
-        conn.send(b'\r\n Ciao dati registrati')
-
-        #!elenco
+        
+        #!elenco al primo è gia stringa
         if data[:7].decode() == "!elenco":
             print("Richiesto elenco")
             #ciclo for per elenco utenti connessi
             for k in CLIENT:
                 result += "\r\n" + k + ": indirizzo " + CLIENT[k][0] + " porta " + str(CLIENT[k][1])
-            conn.send(result.encode() + b'\r\n')
-                #conn.send(v)
+            print(result)
+            #print('\r\nSto inviando il primo leenco') 
+            conn.send(result.encode())
+            conn.send(b'\r\nElenco client\r\n')
 
         #!connect nome
         if data[:8].decode() == "!connect":
@@ -72,10 +79,11 @@ def clientthread(conn):
 
         #!quit
         if data[:5].decode() == "!quit":
-            print(str(addr[1]) + " ci ha lasciato quit.")
-            del CLIENT[str(addr[1])]
+            print(NICK_REM + " " + str(CLIENT[NICK_REM]) + " ci ha lasciato con quit.")
+            del CLIENT[NICK_REM]
             for k in CLIENT:
                 result += "\r\n" + k + ": indirizzo " + CLIENT[k][0] + " porta " + str(CLIENT[k][1])
+            print(result)
             conn.send(result.encode() + b'\r\nAddio\r\n')
             conn.close
             break
@@ -103,7 +111,8 @@ def clientthread(conn):
 while 1:
     conn, addr = s.accept()
     print('Connesso con ' + addr[0] + ':' + str(addr[1]))
-
+    print(conn)
+    
     start_new_thread(clientthread,(conn,))
 
 s.close()
