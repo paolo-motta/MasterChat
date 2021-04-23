@@ -1,12 +1,12 @@
 import socket
 
 HOST = ""
-PORT = 3313
+PORT = 3311
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
 sock.bind((HOST,PORT))
-sock.sendto(b'NICK_REMOTO', ('127.0.0.1', 3333))
+#sock.sendto(b'NICK_REMOTO', ('127.0.0.1', 3318))
 while True:
     data, addr = sock.recvfrom(1024)
     print("Ricevuto: " + data.decode())

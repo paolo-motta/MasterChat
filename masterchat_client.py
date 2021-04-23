@@ -25,7 +25,7 @@ except socket.error as msg:
     sys.exit();
 
 #creo connessione con il server
-st.connect(("127.0.0.1", 3340))
+st.connect(("127.0.0.1", 3330))
 print("Server Socket Connected")
 
 #invio parametri del client al server
@@ -46,7 +46,7 @@ su.bind(CONN)
 
 #definisco thread udp in ascolto
 def server_udp():
-    print("\r\nSECONDARIO in attesa comando")
+    print("\r\nSocket UDP in attesa connessione")
     global IMPEGNATO, NICK_REM, CONN_REM
     data, addr = su.recvfrom(1024)
     print('\r\n\Stampo dati prima connession: ' + data.decode())
@@ -86,7 +86,7 @@ start_new_thread(server_udp ,())
 #message = input("PRINCIPALE in attesa comando")
 
 while True:
-    cmd = input("\r\nPRINCIPALE in attesa comando: ")
+    cmd = input("\r\nSocket TCP in attesa comando: ")
     print('Ho inserito comando nel thread principale')
     #print('\r\n data: ' + data.decode())
     #combo = (addr[0], addr[1])
@@ -114,23 +114,21 @@ while True:
         break
     
     #!connect nome
-    if data[:8].decode() == "!connect":
-        nome = data[9:].decode()
-        print("Si vuole connettere con " + nome)
+    if cmd[:8] == "!connect":
+        nome = cmd[9:]
+        print("\r\nTi vuoi connettere con " + nome)
         #print(nome)
         #cerco chiave "nome" in CLIENT
-        if nome in CLIENT:
-            #restituisco i parametri
-            result = str(CLIENT[nome][0]) + "|" + str(CLIENT[nome][1])
-            conn.send(result.encode() + b'\r\n')
-
-        if not nome in CLIENT:
-            print(nome + " non è disponibile")
-            result = nome + " non disponibile"
-            conn.send(result.encode() + b'\r\n')
-
+        st.send(cmd.encode())
+        print("\r\nRichiesti dati connessione per " + nome)
+        data = st.recv(1024)
+        print(data.decode())
+        data = json.loads(data.decode())
+        #combo = (data['IP'], data['PORT'])
+        print(data)
+        
     #Dracarys
-    if data[:9].decode() == "!dracarys":
+    if cmd[:9] == "!dracarys":
         print(str(addr[1]) + " ci ha lasciato Dracarys.")
         del CLIENT[str(addr[1])]
         for k in CLIENT:
