@@ -1,3 +1,9 @@
+'''
+to do:
+    gestire se non trovo client in connect
+
+'''
+
 import socket
 import sys, json
 from _thread import *
@@ -34,6 +40,13 @@ def clientthread(conn):
     combo = (data['IP'], data['PORT'])
     #print(combo)
     #print('\r\nCombo: ' + str(combo) + '\r\n')
+    for k in CLIENT:
+        if k == data['NICK']:
+            print("\r\nERR: il client " + data['NICK'] + " è già presente")
+            err_message = '\r\nERR: il client ' + data['NICK'] + ' è già presente'
+            conn.send(err_message.encode())
+            conn.close()
+            return
     
     CLIENT[data['NICK']] = combo
     #ciclo for per elenco utenti connessi

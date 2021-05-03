@@ -1,3 +1,9 @@
+'''
+to do:
+    gestire se client occupato (c'è già?)
+
+'''
+
 import socket, sys, json
 from _thread import *
 
@@ -31,7 +37,15 @@ print("Server Socket Connected")
 #invio parametri del client al server
 print(PARAM)
 st.sendall(json.dumps(PARAM).encode())
-print(st.recv(1024).decode())
+data = st.recv(1024).decode()
+
+#if errore chiudo
+#!quit
+if data[:6] == "\r\nERR:":
+    print(data)
+    st.close()  
+    sys.exit()         
+
 #print('\r\ninviati parametri nick e conn')
 #stampo conferma arrivo dati
 #print(st.recv(1024).decode())
@@ -49,10 +63,10 @@ def server_udp():
     print("\r\nSocket UDP in attesa connessione")
     global IMPEGNATO, NICK_REM, CONN_REM
     data, addr = su.recvfrom(1024)
-    print('\r\n\Stampo dati prima connession: ' + data.decode())
-    #verifico se già impegnato in cheht e modifico valore
+
+    #verifico se già impegnato in chat e modifico valore
     if IMPEGNATO == False:
-       
+        print('\r\nStampo dati prima connession: ' + data.decode())       
         IMPEGNATO = True
         
         #memorizzo dati client remoto
@@ -60,10 +74,10 @@ def server_udp():
         CONN_REM = addr
         
         #rispondo connessione accettata
-        message = 'Ciao ' + NICK_REM + ', benvenuto!'
+        message = '\r\nCiao ' + NICK_REM + ', benvenuto!\r\n'
         print(NICK_REM + str(CONN_REM))
         su.sendto(message.encode(), CONN_REM)
- 
+        ''' 
         #entro ciclo di chat ogni ciclo verifico messaggio se comando o no
         while True:
             #attendo connessione da parte di un client
@@ -73,13 +87,20 @@ def server_udp():
             #verifico se ricevo messaggio di chiusura
             message = input(NICK_REM)
             su.sendto(message.encode(), CONN_REM)
-            '''
+
             devo valutare messaggio di chiusura di sua iniziativa o in risposta alla mia
             '''
-            
     else:
-        message = '\r\nCiao ' + NICK_REM + ', mi dispiace non sono disponibile'
-        su.sendto(message.encode() , CONN_REM)
+        if IMPEGNATO == True:
+            if CONN_REM==addr:
+                #sono impeganto con lui quindi verifico opzioni
+                if data[:11].decode()=="!disconnect":
+                    print("\r\nHai deciso di andartene!")
+                else:    
+                    print(data.decode())
+            else:
+                message = '\r\nCiao ' + NICK_REM + ', mi dispiace non sono disponibile'
+                su.sendto(message.encode() , CONN_REM)
         
 start_new_thread(server_udp ,())
 
@@ -96,10 +117,19 @@ while True:
     #result=""
     #st.send(b'\r\n Ciao dati registrati')
 
-    #!elenco
+    #!help
+    if cmd[:5] == "!help":
+        print("\r\nRichiesto elenco comandi")
+        print("\r\n!help --> mostra questo elenco \
+            \r\n!elenco --> ritorna elenco client disponibili \
+            \r\n!connect <client> --> avvia una chat con l'utente client \
+            \r\n!disconnect --> disconnette l'attuale chat \
+            \r\n!quit --> esce dal programma")
+
+    #!elenco        
     if cmd[:7] == "!elenco":
         st.send(cmd.encode())
-        print("Richiesto elenco")
+        print("\r\nRichiesto elenco")
         data = st.recv(1024)
         print(data.decode())
         #ciclo for per elenco utenti connessi
@@ -123,19 +153,37 @@ while True:
         print("\r\nRichiesti dati connessione per " + nome)
         data = st.recv(1024)
         print(data.decode())
-        data = json.loads(data.decode())
-        #combo = (data['IP'], data['PORT'])
-        print(data)
-        
-    #Dracarys
-    if cmd[:9] == "!dracarys":
-        print(str(addr[1]) + " ci ha lasciato Dracarys.")
-        del CLIENT[str(addr[1])]
-        for k in CLIENT:
-            result += "\r\n" + k + ": indirizzo " + CLIENT[k][0] + " porta " + str(CLIENT[k][1])
-        conn.send(result.encode() + b'\r\nAddio\r\n')
-        conn.close
-        s.close
-        break
-
-      
+        print(data[-17:-2].decode())
+        if data[-17:-2].decode()=="non disponibile":
+            print(nome + " non è disponibile")
+        else:
+            data = json.loads(data.decode())
+            CONN_REM = (data['IP'], data['PORT'])
+            NICK_REM = nome
+            print(data)
+            su.sendto(NICK.encode(), (data['IP'], int(data['PORT'])))
+            IMPEGNATO == True
+            while IMPEGNATO == True:
+                data = st.recv(1024).decode()
+                #if dara errore
+                print(data)
+                cmd = input("\r\n"+NICK+"> ")
+                if cmd[:11] == "!disconnect":
+                    print("\r\nHai deciso di andartene!")
+                    su.sendto(b'Disconnect', (data['IP'], data['PORT']))
+                    IMPEGNATO == False
+                    CONN_REM = ()
+                    NICK_REM = ""
+                    data = st.recv(1024).decode()
+                    print(data)
+                break
+     
+    #!disconnect
+    if cmd[:11] == "!disconnect":
+        print("\r\nHai deciso di concludere la chat")
+        su.sendto(b'disconnect', (data['IP'], data['PORT']))
+        IMPEGNATO == False
+        data = st.recv(1024)      
+        print(data.decode())                
+             
+     
