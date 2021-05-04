@@ -7,7 +7,7 @@ CONN = (str(sys.argv[2]), int(sys.argv[3]))
 NICK_REM = ""
 CONN_REM = ()
 IMPEGNATO = False
-PARAM = {'NICK':NICK,'IP':str(sys.argv[2]),'PORT':sys.argv[3]}
+PARAM = {'NICK':NICK,'IP':str(sys.argv[2]),'PORT':int(sys.argv[3])}
 
 #creo socket tcp per il server
 try:
@@ -58,12 +58,12 @@ def server_udp():
     
     #va in loop - in caso eliminare while
         if IMPEGNATO == True:
-            if CONN_REM==addr:
+            if CONN_REM == addr:
                 #sono impeganto con lui quindi verifico opzioni
                 if data[:11].decode()=="!disconnect":
-                    print("\r\nHai deciso di andartene!\r\n")
+                    print("\r\nHa deciso di andarsene!\r\n")
                     su.sendto(b'ADDIO', CONN_REM)
-                    IMPEGNATO == False
+                    IMPEGNATO = False
                     CONN_REM = ()
                     NICK_REM = ""
                     break
@@ -78,7 +78,7 @@ def server_udp():
             IMPEGNATO = True
             
             #memorizzo dati client remoto
-            if NICK_REM=="":
+            if NICK_REM == "":
                 NICK_REM = data.decode()
             CONN_REM = addr
             
@@ -130,16 +130,19 @@ while True:
         CONN_REM = (data['IP'], data['PORT'])
         NICK_REM = data['NICK']
         print(data)
-        su.sendto(NICK.encode(), (data['IP'], int(data['PORT'])))
-        IMPEGNATO == True
+        su.sendto(NICK.encode(), CONN_REM)
+        IMPEGNATO = True
      
     #!disconnect
     if cmd[:11] == "!disconnect":
         print("\r\nHai deciso di concludere la chat\r\n")
         su.sendto(b'!disconnect', CONN_REM)
-        IMPEGNATO == False
+        IMPEGNATO = False
         CONN_REM = ()
         NICK_REM = ""
-             
+
+    if cmd[:1]=="!":
+        print("\r\nComando non conosciuto.") 
+            
     if cmd[:1]!="!":
          su.sendto(cmd.encode(), CONN_REM)

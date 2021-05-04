@@ -90,17 +90,6 @@ def clientthread(conn):
                 result = nome + " non disponibile"
                 conn.send(result.encode() + b'\r\n')
 
-        #Dracarys
-        if data[:9].decode() == "!dracarys":
-            print(str(addr[1]) + " ci ha lasciato Dracarys.")
-            del CLIENT[str(addr[1])]
-            for k in CLIENT:
-                result += "\r\n" + k + ": indirizzo " + CLIENT[k][0] + " porta " + str(CLIENT[k][1])
-            conn.send(result.encode() + b'\r\nAddio\r\n')
-            conn.close
-            s.close
-            break
-
     conn.close()
 
 while 1:
