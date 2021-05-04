@@ -61,13 +61,11 @@ def server_udp():
             if CONN_REM==addr:
                 #sono impeganto con lui quindi verifico opzioni
                 if data[:11].decode()=="!disconnect":
-                    print("\r\nHai deciso di andartene!")
-                    su.sendto(b'disconnect', CONN_REM)
+                    print("\r\nHai deciso di andartene!\r\n")
+                    su.sendto(b'ADDIO', CONN_REM)
                     IMPEGNATO == False
                     CONN_REM = ()
                     NICK_REM = ""
-                    data = su.recv(1024)      
-                    print(data.decode())
                     break
                 else:    
                     print(NICK_REM + " > " + data.decode())
@@ -93,8 +91,8 @@ def server_udp():
 start_new_thread(server_udp ,())
 
 while True:
-    cmd = input("\r\nSocket TCP in attesa comando: ")
-    print('Ho inserito comando nel thread principale')
+    cmd = input()
+    #print('Ho inserito comando nel thread principale')
 
     #!help
     if cmd[:5] == "!help":
@@ -139,13 +137,11 @@ while True:
      
     #!disconnect
     if cmd[:11] == "!disconnect":
-        print("\r\nHai deciso di concludere la chat")
-        su.sendto(b'disconnect', CONN_REM)
+        print("\r\nHai deciso di concludere la chat\r\n")
+        su.sendto(b'!disconnect', CONN_REM)
         IMPEGNATO == False
         CONN_REM = ()
         NICK_REM = ""
-        data = su.recv(1024)      
-        print(data.decode())                
              
     if cmd[:1]!="!":
          su.sendto(cmd.encode(), CONN_REM)
