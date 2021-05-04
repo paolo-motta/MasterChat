@@ -86,13 +86,11 @@ def server_udp():
             message = '\r\nCiao ' + NICK_REM + ', benvenuto!\r\n'
             print("\r\nSei collegato con: " + NICK_REM + str(CONN_REM))
             su.sendto(message.encode(), CONN_REM)
-
         
 start_new_thread(server_udp ,())
 
 while True:
     cmd = input()
-    #print('Ho inserito comando nel thread principale')
 
     #!help
     if cmd[:5] == "!help":
