@@ -1,15 +1,7 @@
-'''
-to do:
-    gestire se non trovo client in connect
-
-'''
-
 import socket
 import sys, json
 from _thread import *
 
-#HOST = str(sys.argv[1])
-#PORT = int(sys.argv[2])
 HOST = ''
 PORT = 3310
 
@@ -34,12 +26,8 @@ def clientthread(conn):
     result=""
 
     data = conn.recv(1024)
-    #print('\r\nData: ' + data.decode())
-    #print(json.loads(data.decode()))
     data = json.loads(data.decode())
     combo = (data['IP'], data['PORT'])
-    #print(combo)
-    #print('\r\nCombo: ' + str(combo) + '\r\n')
     for k in CLIENT:
         if k == data['NICK']:
             print("\r\nERR: il client " + data['NICK'] + " è già presente")
@@ -49,13 +37,13 @@ def clientthread(conn):
             return
     
     CLIENT[data['NICK']] = combo
+    
     #ciclo for per elenco utenti connessi
     for k in CLIENT:
         result += "\r\n"+ k + ": indirizzo " + CLIENT[k][0] + " porta " + str(CLIENT[k][1])
     print("\r\nElenco client attualmente disponibili:" + result)
     NICK_REM = data['NICK']
     CONN_REM = (data['IP'],data['PORT'])
-    #print(NICK_REM, CONN_REM)
     print("\r\nIl client " + NICK_REM + " " + str(CONN_REM) + " è stato registrato")
     conn.send(b'\r\nCiao dati registrati')    
     
@@ -72,9 +60,7 @@ def clientthread(conn):
             for k in CLIENT:
                 result += "\r\n" + k + ": indirizzo " + CLIENT[k][0] + " porta " + str(CLIENT[k][1])
             print(result)
-            #print('\r\nSto inviando il primo leenco') 
             conn.send(result.encode())
-            #conn.send(b'\r\nElenco client\r\n')
 
         #!quit
         if data[:5].decode() == "!quit":
@@ -91,7 +77,7 @@ def clientthread(conn):
         if data[:8].decode() == "!connect":
             nome = data[9:].decode()
             print("\r\n" + NICK_REM + " si vuole connettere con " + nome)
-            #print(nome)
+
             #cerco chiave "nome" in CLIENT
             if nome in CLIENT:
                 #restituisco i parametri

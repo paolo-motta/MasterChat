@@ -1,26 +1,13 @@
-'''
-to do:
-    gestire se client occupato (c'è già?)
-
-'''
-
 import socket, sys, json
 from _thread import *
 
 #memorizzo dati del client e inizializzo variabili
 NICK = str(sys.argv[1])
 CONN = (str(sys.argv[2]), int(sys.argv[3]))
-#NICK = "pippo"
-#HOST = "127.0.0.1"
-#PORT = 3316
 NICK_REM = ""
 CONN_REM = ()
 IMPEGNATO = False
 PARAM = {'NICK':NICK,'IP':str(sys.argv[2]),'PORT':sys.argv[3]}
-#PARAM = {'NICK':NICK,'IP':HOST, 'PORT':PORT}
-#NICK = "pippo"
-#HOST = "127.0.0.1"
-#PORT = 3330
 
 #creo socket tcp per il server
 try:
@@ -46,10 +33,6 @@ if data[:6] == "\r\nERR:":
     st.close()  
     sys.exit()         
 
-#print('\r\ninviati parametri nick e conn')
-#stampo conferma arrivo dati
-#print(st.recv(1024).decode())
-#chiedo elenco client al server
 print("\r\nELENCO COMANDI DISPONOBILI: \
                 \r\n!help --> mostra questo elenco \
                 \r\n!elenco --> ritorna elenco client disponibili \
@@ -57,6 +40,8 @@ print("\r\nELENCO COMANDI DISPONOBILI: \
                 \r\n!disconnect --> disconnette l'attuale chat \
                 \r\n!quit --> esce dal programma")
 print('\r\nRICHIESTO ELENCO CLIENT CONNESSI...')
+
+#chiedo elenco client
 st.sendall(b'!elenco')
 print(st.recv(1024).decode())
 
@@ -107,8 +92,6 @@ def server_udp():
         
 start_new_thread(server_udp ,())
 
-#message = input("PRINCIPALE in attesa comando")
-
 while True:
     cmd = input("\r\nSocket TCP in attesa comando: ")
     print('Ho inserito comando nel thread principale')
@@ -128,9 +111,7 @@ while True:
         print("\r\nRichiesto elenco")
         data = st.recv(1024)
         print(data.decode())
-        #ciclo for per elenco utenti connessi
-        #st.send(result.encode() + b'\r\n')
-            #conn.send(v)
+
     #!quit
     if cmd[:5] == "!quit":
         print("\r\nHai deciso di andartene!")
@@ -143,8 +124,6 @@ while True:
     if cmd[:8] == "!connect":
         nome = cmd[9:]
         print("\r\nTi vuoi connettere con " + nome)
-        #print(nome)
-        #cerco chiave "nome" in CLIENT
         st.send(cmd.encode())
         print("\r\nRichiesti dati connessione per " + nome)
         data = st.recv(1024)
