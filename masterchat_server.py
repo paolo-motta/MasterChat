@@ -11,7 +11,7 @@ from _thread import *
 #HOST = str(sys.argv[1])
 #PORT = int(sys.argv[2])
 HOST = ''
-PORT = 3330
+PORT = 3310
 
 CLIENT={'tizio':('127.0.0.1',3311),'caio':('127.0.0.1',3312),'sempronio':('127.0.0.1',3313)}
 
@@ -78,12 +78,12 @@ def clientthread(conn):
 
         #!quit
         if data[:5].decode() == "!quit":
-            print(NICK_REM + " " + str(CLIENT[NICK_REM]) + " ci ha lasciato con quit.")
+            print('\r\nAddio a ' + NICK_REM + " " + str(CLIENT[NICK_REM])) 
             del CLIENT[NICK_REM]
             for k in CLIENT:
                 result += "\r\n" + k + ": indirizzo " + CLIENT[k][0] + " porta " + str(CLIENT[k][1])
-            print(result)
-            conn.send(result.encode() + b'\r\nAddio\r\n')
+            print('\r\nRimangono disponibili i seguenti client:\r\n' + result)
+            conn.send(b'\r\nRimangono disponibili i seguenti client:\r\n' + result.encode() + b'\r\nAddio\r\n')
             conn.close
             break
         
@@ -119,7 +119,7 @@ def clientthread(conn):
 
 while 1:
     conn, addr = s.accept()
-    print('Connesso con ' + addr[0] + ':' + str(addr[1]))
+    print('\r\nConnesso con ' + addr[0] + ':' + str(addr[1]))
     #print(conn)
     
     start_new_thread(clientthread,(conn,))

@@ -31,7 +31,7 @@ except socket.error as msg:
     sys.exit();
 
 #creo connessione con il server
-st.connect(("127.0.0.1", 3330))
+st.connect(("127.0.0.1", 3310))
 print("Server Socket Connected")
 
 #invio parametri del client al server
@@ -50,8 +50,14 @@ if data[:6] == "\r\nERR:":
 #stampo conferma arrivo dati
 #print(st.recv(1024).decode())
 #chiedo elenco client al server
+print("\r\nELENCO COMANDI DISPONOBILI: \
+                \r\n!help --> mostra questo elenco \
+                \r\n!elenco --> ritorna elenco client disponibili \
+                \r\n!connect <client> --> avvia una chat con l'utente client \
+                \r\n!disconnect --> disconnette l'attuale chat \
+                \r\n!quit --> esce dal programma")
+print('\r\nRICHIESTO ELENCO CLIENT CONNESSI...')
 st.sendall(b'!elenco')
-print('\r\nin attesa elenco')
 print(st.recv(1024).decode())
 
 #creo socket udp in ascolto e lancio thread
@@ -62,45 +68,42 @@ su.bind(CONN)
 def server_udp():
     print("\r\nSocket UDP in attesa connessione")
     global IMPEGNATO, NICK_REM, CONN_REM
-    data, addr = su.recvfrom(1024)
-
-    #verifico se già impegnato in chat e modifico valore
-    if IMPEGNATO == False:
-        print('\r\nStampo dati prima connession: ' + data.decode())       
-        IMPEGNATO = True
-        
-        #memorizzo dati client remoto
-        NICK_REM = data.decode()
-        CONN_REM = addr
-        
-        #rispondo connessione accettata
-        message = '\r\nCiao ' + NICK_REM + ', benvenuto!\r\n'
-        print(NICK_REM + str(CONN_REM))
-        su.sendto(message.encode(), CONN_REM)
-        ''' 
-        #entro ciclo di chat ogni ciclo verifico messaggio se comando o no
-        while True:
-            #attendo connessione da parte di un client
-            data, addr = su.recvfrom(1024)
-            message = data.decode()
-            print("Ricevuto: " + data.decode())
-            #verifico se ricevo messaggio di chiusura
-            message = input(NICK_REM)
-            su.sendto(message.encode(), CONN_REM)
-
-            devo valutare messaggio di chiusura di sua iniziativa o in risposta alla mia
-            '''
-    else:
+    while True:
+        data, addr = su.recvfrom(1024)
+    
+    #va in loop - in caso eliminare while
         if IMPEGNATO == True:
             if CONN_REM==addr:
                 #sono impeganto con lui quindi verifico opzioni
                 if data[:11].decode()=="!disconnect":
                     print("\r\nHai deciso di andartene!")
-                else:    
+                    su.sendto(b'disconnect', CONN_REM)
+                    IMPEGNATO == False
+                    CONN_REM = ()
+                    NICK_REM = ""
+                    data = su.recv(1024)      
                     print(data.decode())
+                    break
+                else:    
+                    print(NICK_REM + " > " + data.decode())
             else:
                 message = '\r\nCiao ' + NICK_REM + ', mi dispiace non sono disponibile'
-                su.sendto(message.encode() , CONN_REM)
+                su.sendto(message.encode() , addr)
+        #verifico se già impegnato in chat e modifico valore
+        if IMPEGNATO == False:
+            print('\r\nStampo dati prima connessione: ' + data.decode())       
+            IMPEGNATO = True
+            
+            #memorizzo dati client remoto
+            if NICK_REM=="":
+                NICK_REM = data.decode()
+            CONN_REM = addr
+            
+            #rispondo connessione accettata
+            message = '\r\nCiao ' + NICK_REM + ', benvenuto!\r\n'
+            print("\r\nSei collegato con: " + NICK_REM + str(CONN_REM))
+            su.sendto(message.encode(), CONN_REM)
+
         
 start_new_thread(server_udp ,())
 
@@ -109,13 +112,6 @@ start_new_thread(server_udp ,())
 while True:
     cmd = input("\r\nSocket TCP in attesa comando: ")
     print('Ho inserito comando nel thread principale')
-    #print('\r\n data: ' + data.decode())
-    #combo = (addr[0], addr[1])
-    #print('\r\n combo: ' + str(combo))
-    #CLIENT[str(addr[1])] = combo
-    #print(CLIENT)
-    #result=""
-    #st.send(b'\r\n Ciao dati registrati')
 
     #!help
     if cmd[:5] == "!help":
@@ -152,38 +148,25 @@ while True:
         st.send(cmd.encode())
         print("\r\nRichiesti dati connessione per " + nome)
         data = st.recv(1024)
-        print(data.decode())
-        print(data[-17:-2].decode())
         if data[-17:-2].decode()=="non disponibile":
             print(nome + " non è disponibile")
-        else:
-            data = json.loads(data.decode())
-            CONN_REM = (data['IP'], data['PORT'])
-            NICK_REM = nome
-            print(data)
-            su.sendto(NICK.encode(), (data['IP'], int(data['PORT'])))
-            IMPEGNATO == True
-            while IMPEGNATO == True:
-                data = st.recv(1024).decode()
-                #if dara errore
-                print(data)
-                cmd = input("\r\n"+NICK+"> ")
-                if cmd[:11] == "!disconnect":
-                    print("\r\nHai deciso di andartene!")
-                    su.sendto(b'Disconnect', (data['IP'], data['PORT']))
-                    IMPEGNATO == False
-                    CONN_REM = ()
-                    NICK_REM = ""
-                    data = st.recv(1024).decode()
-                    print(data)
-                break
+            break
+        data = json.loads(data.decode())
+        CONN_REM = (data['IP'], data['PORT'])
+        NICK_REM = data['NICK']
+        print(data)
+        su.sendto(NICK.encode(), (data['IP'], int(data['PORT'])))
+        IMPEGNATO == True
      
     #!disconnect
     if cmd[:11] == "!disconnect":
         print("\r\nHai deciso di concludere la chat")
-        su.sendto(b'disconnect', (data['IP'], data['PORT']))
+        su.sendto(b'disconnect', CONN_REM)
         IMPEGNATO == False
-        data = st.recv(1024)      
+        CONN_REM = ()
+        NICK_REM = ""
+        data = su.recv(1024)      
         print(data.decode())                
              
-     
+    if cmd[:1]!="!":
+         su.sendto(cmd.encode(), CONN_REM)
