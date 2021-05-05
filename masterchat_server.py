@@ -93,11 +93,10 @@ def clientthread(conn):
     conn.close()
 
 while 1:
+    
     conn, addr = s.accept()
     print('\r\nConnesso con ' + addr[0] + ':' + str(addr[1]))
-    #print(conn)
     
     start_new_thread(clientthread,(conn,))
 
 s.close()
-

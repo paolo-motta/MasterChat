@@ -26,7 +26,6 @@ print(PARAM)
 st.sendall(json.dumps(PARAM).encode())
 data = st.recv(1024).decode()
 
-#if errore chiudo
 #!quit
 if data[:6] == "\r\nERR:":
     print(data)
@@ -68,10 +67,10 @@ def server_udp():
                     break
                 else:    
                     print(NICK_REM + " > " + data.decode() + "\r\n" + NICK + " > ")
-                    #print(NICK + " > ")
             else:
                 message = '\r\nCiao ' + NICK_REM + ', mi dispiace non sono disponibile'
                 su.sendto(message.encode() , addr)
+        
         #verifico se già impegnato in chat e modifico valore
         if IMPEGNATO == False:
             if data[:11].decode()!="!disconnect":
@@ -91,11 +90,14 @@ def server_udp():
 start_new_thread(server_udp ,())
 
 while True:
+    
     cmd = input(NICK + " > ")
 
+    #nessun input
     if not cmd:
         print("\r\nDevi digitare qualcosa\r\n")
     
+    #messaggio in input
     elif cmd[:1]!="!":
         if IMPEGNATO:
             su.sendto(cmd.encode(), CONN_REM)
@@ -151,7 +153,7 @@ while True:
         IMPEGNATO = False
         CONN_REM = ()
         NICK_REM = ""
-         
+    
+    #comando sconosciuto     
     elif cmd[:1]=="!":
         print("\r\nComando non conosciuto.\r\n")
-
