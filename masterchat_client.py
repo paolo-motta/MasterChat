@@ -43,7 +43,7 @@ print('\r\nRICHIESTO ELENCO CLIENT CONNESSI...')
 
 #chiedo elenco client
 st.sendall(b'!elenco')
-print(st.recv(1024).decode())
+print(st.recv(1024).decode() + '\r\n')
 
 #creo socket udp in ascolto e lancio thread
 su = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -51,73 +51,84 @@ su.bind(CONN)
 
 #definisco thread udp in ascolto
 def server_udp():
-    print("\r\nSocket UDP in attesa connessione")
+    
     global IMPEGNATO, NICK_REM, CONN_REM
     while True:
         data, addr = su.recvfrom(1024)
     
-    #va in loop - in caso eliminare while
         if IMPEGNATO == True:
             if CONN_REM == addr:
                 #sono impeganto con lui quindi verifico opzioni
                 if data[:11].decode()=="!disconnect":
                     print("\r\nHa deciso di andarsene!\r\n")
-                    su.sendto(b'ADDIO', CONN_REM)
+                    su.sendto(b'!disconnect', CONN_REM)
                     IMPEGNATO = False
                     CONN_REM = ()
                     NICK_REM = ""
                     break
                 else:    
-                    print(NICK_REM + " > " + data.decode())
+                    print(NICK_REM + " > " + data.decode() + "\r\n" + NICK + " > ")
+                    #print(NICK + " > ")
             else:
                 message = '\r\nCiao ' + NICK_REM + ', mi dispiace non sono disponibile'
                 su.sendto(message.encode() , addr)
         #verifico se già impegnato in chat e modifico valore
         if IMPEGNATO == False:
-            print('\r\nStampo dati prima connessione: ' + data.decode())       
-            IMPEGNATO = True
-            
-            #memorizzo dati client remoto
-            if NICK_REM == "":
-                NICK_REM = data.decode()
-            CONN_REM = addr
-            
-            #rispondo connessione accettata
-            message = '\r\nCiao ' + NICK_REM + ', benvenuto!\r\n'
-            print("\r\nSei collegato con: " + NICK_REM + str(CONN_REM))
-            su.sendto(message.encode(), CONN_REM)
+            if data[:11].decode()!="!disconnect":
+                print('\r\nStampo dati prima connessione: ' + data.decode())       
+                IMPEGNATO = True
+                
+                #memorizzo dati client remoto
+                if NICK_REM == "":
+                    NICK_REM = data.decode()
+                CONN_REM = addr
+                
+                #rispondo connessione accettata
+                message = '\r\nCiao ' + NICK_REM + ', benvenuto!\r\n'
+                print("\r\nSei collegato con: " + NICK_REM + str(CONN_REM))
+                su.sendto(message.encode(), CONN_REM)
         
 start_new_thread(server_udp ,())
 
 while True:
-    cmd = input()
+    cmd = input(NICK + " > ")
 
+    if not cmd:
+        print("\r\nDevi digitare qualcosa\r\n")
+    
+    elif cmd[:1]!="!":
+        if IMPEGNATO:
+            su.sendto(cmd.encode(), CONN_REM)
+
+        else:
+            print("\r\nDevi digitare un comando!\r\n")
+        
     #!help
-    if cmd[:5] == "!help":
+    elif cmd[:5] == "!help":
         print("\r\nRichiesto elenco comandi")
         print("\r\n!help --> mostra questo elenco \
             \r\n!elenco --> ritorna elenco client disponibili \
             \r\n!connect <client> --> avvia una chat con l'utente client \
             \r\n!disconnect --> disconnette l'attuale chat \
-            \r\n!quit --> esce dal programma")
+            \r\n!quit --> esce dal programma\r\n")
 
     #!elenco        
-    if cmd[:7] == "!elenco":
+    elif cmd[:7] == "!elenco":
         st.send(cmd.encode())
         print("\r\nRichiesto elenco")
         data = st.recv(1024)
-        print(data.decode())
+        print(data.decode() + '\r\n')
 
     #!quit
-    if cmd[:5] == "!quit":
+    elif cmd[:5] == "!quit":
         print("\r\nHai deciso di andartene!")
         st.send(cmd.encode())
         data = st.recv(1024)      
-        print(data.decode())                
+        print(data.decode())  
         break
     
     #!connect nome
-    if cmd[:8] == "!connect":
+    elif cmd[:8] == "!connect":
         nome = cmd[9:]
         print("\r\nTi vuoi connettere con " + nome)
         st.send(cmd.encode())
@@ -125,24 +136,22 @@ while True:
         data = st.recv(1024)
         if data[-17:-2].decode()=="non disponibile":
             print(nome + " non è disponibile")
-            break
-        data = json.loads(data.decode())
-        CONN_REM = (data['IP'], data['PORT'])
-        NICK_REM = data['NICK']
-        print(data)
-        su.sendto(NICK.encode(), CONN_REM)
-        IMPEGNATO = True
+        else: 
+            data = json.loads(data.decode())
+            CONN_REM = (data['IP'], data['PORT'])
+            NICK_REM = data['NICK']
+            print(data)
+            su.sendto(NICK.encode(), CONN_REM)
+            IMPEGNATO = True
      
     #!disconnect
-    if cmd[:11] == "!disconnect":
+    elif cmd[:11] == "!disconnect":
         print("\r\nHai deciso di concludere la chat\r\n")
         su.sendto(b'!disconnect', CONN_REM)
         IMPEGNATO = False
         CONN_REM = ()
         NICK_REM = ""
+         
+    elif cmd[:1]=="!":
+        print("\r\nComando non conosciuto.\r\n")
 
-    if cmd[:1]=="!":
-        print("\r\nComando non conosciuto.") 
-            
-    if cmd[:1]!="!":
-         su.sendto(cmd.encode(), CONN_REM)
