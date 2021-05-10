@@ -1,13 +1,17 @@
 '''
-gestione chiave assegnata o meno
+si potrebbe modificare per inviare sempre un json
+poi chi riceve parsa le chiavi e a seconda delle chivi trovate fa cose (magari chiamando funzioni)
+gestione chiave DH assegnata o meno
 andrà gestita la cancellazione della chiave al disconnect
 '''
 
-from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import hashes, padding
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 from _thread import *
-import socket, sys, json
+import socket, sys, json, binascii, os
 
 #memorizzo dati del client e inizializzo variabili
 NICK = str(sys.argv[1])
@@ -16,7 +20,7 @@ NICK_REM = ""
 CONN_REM = ()
 IMPEGNATO = False
 PARAM = {'NICK':NICK,'IP':str(sys.argv[2]),'PORT':int(sys.argv[3])}
-
+block = algorithms.AES.block_size/8
 #creo socket tcp per il server
 try:
     st = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -92,10 +96,17 @@ def server_udp():
                 CONN_REM = addr
                 
                 '''
-                >>> private_key = ec.generate_private_key(ec.SECP384R1())
-                >>> peer_public_key = ec.generate_private_key(ec.SECP384R1()).public_key()
-                >>> shared_key = private_key.exchange(ec.ECDH(), peer_public_key)
-                >>> derived_key = HKDF(algorithm=hashes.SHA256(), length=32, salt=None, info=b'handshake data',).derive(shared_key)
+                ppk = ec.generate_private_key(ec.SECP384R1()).public_key()
+                pk = ec.generate_private_key(ec.SECP384R1())
+                sk = pk.exchange(ec.ECDH(), ppk)
+                dk = HKDF(algorithm=hashes.SHA256(), length=32, salt=None, info=b'handshake data',).derive(sk)
+                
+                iv = os.urandom(block)                
+                ctx = padding.PKCS7(8*block).padder()
+                padded_pt = ctx.update(pt) + ctx.finalize()
+                cipher = Cipher(algorithms.AES(dk), modes.CBC(iv), default_backend())
+                ctx = cipher.encryptor()
+                ciphertext = ctx.update(padded_plaintext) + ctx.finalize()
                 '''
 
                 #rispondo connessione accettata
