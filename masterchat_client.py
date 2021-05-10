@@ -167,12 +167,19 @@ while True:
             print(nome + " non è disponibile")
         else: 
 
-            '''
-            >>> private_key = ec.generate_private_key(ec.SECP384R1())
-            >>> peer_public_key = ec.generate_private_key(ec.SECP384R1()).public_key()
-            >>> shared_key = private_key.exchange(ec.ECDH(), peer_public_key)
-            >>> derived_key = HKDF(algorithm=hashes.SHA256(), length=32, salt=None, info=b'handshake data',).derive(shared_key)
-            '''
+        '''
+        ppk = ec.generate_private_key(ec.SECP384R1()).public_key()
+        pk = ec.generate_private_key(ec.SECP384R1())
+        sk = pk.exchange(ec.ECDH(), ppk)
+        dk = HKDF(algorithm=hashes.SHA256(), length=32, salt=None, info=b'handshake data',).derive(sk)
+
+        iv = os.urandom(block)                
+        ctx = padding.PKCS7(8*block).padder()
+        padded_pt = ctx.update(pt) + ctx.finalize()
+        cipher = Cipher(algorithms.AES(dk), modes.CBC(iv), default_backend())
+        ctx = cipher.encryptor()
+        ciphertext = ctx.update(padded_plaintext) + ctx.finalize()
+        '''
             
             data = json.loads(data.decode())
             CONN_REM = (data['IP'], data['PORT'])
