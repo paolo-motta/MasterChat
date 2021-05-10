@@ -1,8 +1,6 @@
 '''
->>> private_key = ec.generate_private_key(ec.SECP384R1())
->>> peer_public_key = ec.generate_private_key(ec.SECP384R1()).public_key()
->>> shared_key = private_key.exchange(ec.ECDH(), peer_public_key)
->>> derived_key = HKDF(algorithm=hashes.SHA256(), length=32, salt=None, info=b'handshake data',).derive(shared_key)
+gestione chiave assegnata o meno
+andrà gestita la cancellazione della chiave al disconnect
 '''
 
 from cryptography.hazmat.primitives import hashes
@@ -62,6 +60,7 @@ su.bind(CONN)
 def server_udp():
     
     global IMPEGNATO, NICK_REM, CONN_REM
+    
     while True:
         data, addr = su.recvfrom(1024)
     
@@ -92,6 +91,13 @@ def server_udp():
                     NICK_REM = data.decode()
                 CONN_REM = addr
                 
+                '''
+                >>> private_key = ec.generate_private_key(ec.SECP384R1())
+                >>> peer_public_key = ec.generate_private_key(ec.SECP384R1()).public_key()
+                >>> shared_key = private_key.exchange(ec.ECDH(), peer_public_key)
+                >>> derived_key = HKDF(algorithm=hashes.SHA256(), length=32, salt=None, info=b'handshake data',).derive(shared_key)
+                '''
+
                 #rispondo connessione accettata
                 message = '\r\nCiao ' + NICK_REM + ', benvenuto!\r\n'
                 print("\r\nSei collegato con: " + NICK_REM + str(CONN_REM))
@@ -149,6 +155,14 @@ while True:
         if data[-17:-2].decode()=="non disponibile":
             print(nome + " non è disponibile")
         else: 
+
+            '''
+            >>> private_key = ec.generate_private_key(ec.SECP384R1())
+            >>> peer_public_key = ec.generate_private_key(ec.SECP384R1()).public_key()
+            >>> shared_key = private_key.exchange(ec.ECDH(), peer_public_key)
+            >>> derived_key = HKDF(algorithm=hashes.SHA256(), length=32, salt=None, info=b'handshake data',).derive(shared_key)
+            '''
+            
             data = json.loads(data.decode())
             CONN_REM = (data['IP'], data['PORT'])
             NICK_REM = data['NICK']
